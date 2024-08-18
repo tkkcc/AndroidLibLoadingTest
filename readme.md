@@ -1,6 +1,6 @@
 # Android library loading test
 
-need process to make library reloadable, thus more memory usage: 100M each activity on 2G ram.
+need process to make library reloadable, thus more memory usage: 110MB(release & r8) each activity on 2G ram. while same process consumes subtle.
 
 ## conclusion
 

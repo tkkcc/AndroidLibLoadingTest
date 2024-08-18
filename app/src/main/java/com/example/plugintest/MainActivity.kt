@@ -8,7 +8,10 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -136,6 +139,7 @@ fun LibloadingTest() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
 
@@ -148,47 +152,69 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         Text(name, style = MaterialTheme.typography.titleLarge)
         MemoryMonitor()
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(16.dp))
         LibloadingTest()
-        Spacer(Modifier.height(32.dp))
-//
-//        Button(onClick = {
-//            val intent = Intent(context, MainActivity2::class.java)
-//            context.startActivity(intent)
-//        }) {
-//            Text("start activity 2")
-//        }
-//
-//        Button(onClick = {
-//            val intent = Intent(context, MainActivity3::class.java)
-//            context.startActivity(intent)
-//
-//        }) {
-//            Text("start activity 3")
-//        }
-        Button(onClick = {
-            val intent = Intent(context, MainActivity4::class.java)
-            context.startActivity(intent)
+        Spacer(Modifier.height(16.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 
-        }) {
-            Text("start activity 4")
+            Button(onClick = {
+                val intent = Intent(context, MainActivity2::class.java)
+                context.startActivity(intent)
+            }) {
+                Text("start activity 2")
+            }
+            Button(onClick = {
+                val intent = Intent(context, MainActivity3::class.java)
+                context.startActivity(intent)
+
+            }) {
+                Text("start activity 3")
+            }
+            Button(onClick = {
+                val intent = Intent(context, MainActivity4::class.java)
+                context.startActivity(intent)
+
+            }) {
+                Text("start activity 4")
+            }
         }
-        Button(onClick = {
-            val intent = Intent(context, MainActivity4::class.java)
+        Spacer(Modifier.height(16.dp))
+
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = {
+                val intent = Intent(context, MainActivity4::class.java)
 //            (context as ComponentActivity).finishActivity(11)
-            (context as ComponentActivity).finish()
-            exitProcess(0)
-        }) {
-            Text("stop self")
-        }
-        Button(onClick = {
-            val intent = Intent(context, MainActivity4::class.java)
-            (context as ComponentActivity).finish()
-            context.startActivity(intent)
+                (context as ComponentActivity).finish()
+//                exitProcess(0)
+            }) {
+                Text("stop self")
+            }
+            Button(onClick = {
+                val intent = Intent(context, MainActivity4::class.java)
+                (context as ComponentActivity).finish()
+                context.startActivity(intent)
 //            (context as ComponentActivity).finishActivity(11)
-            exitProcess(0)
-        }) {
-            Text("restart self")
+//                exitProcess(0)
+            }) {
+                Text("restart self")
+            }
+            Button(onClick = {
+                val intent = Intent(context, MainActivity4::class.java)
+//            (context as ComponentActivity).finishActivity(11)
+                (context as ComponentActivity).finish()
+                exitProcess(0)
+            }) {
+                Text("stop self process")
+            }
+            Button(onClick = {
+                val intent = Intent(context, MainActivity4::class.java)
+                (context as ComponentActivity).finish()
+                context.startActivity(intent)
+//            (context as ComponentActivity).finishActivity(11)
+                exitProcess(0)
+            }) {
+                Text("restart self process")
+            }
         }
     }
 
