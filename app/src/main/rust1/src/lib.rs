@@ -1,4 +1,4 @@
-use std::os::raw::c_void;
+use std::{os::raw::c_void, thread, time::Duration};
 
 use jni::{
     objects::{JClass, JObject},
@@ -43,6 +43,10 @@ extern "C" fn start(mut env: JNIEnv, host: &JObject) -> i32 {
         let obj: &JObject = msg.as_ref();
         env.call_method(&host, "toast", "(Ljava/lang/String;)V", &[obj.into()])
             .unwrap();
+        loop {
+            env.get_version().unwrap();
+            thread::sleep(Duration::from_millis(1000));
+        }
     }) {
         error!("{err:?}");
     }

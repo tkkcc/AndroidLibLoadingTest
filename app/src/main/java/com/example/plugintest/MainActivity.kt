@@ -161,7 +161,10 @@ fun LibloadingInRust() {
     val context = LocalContext.current
     fun libloading() {
         System.loadLibrary("rust")
-        Native().start(ToNative(context))
+        thread {
+
+            Native().start(ToNative(context))
+        }
     }
     Column {
         Button(::libloading) {
