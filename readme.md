@@ -1,6 +1,8 @@
 # Android library loading test
 
-need process to make library reloadable, thus more memory usage: 110MB(release & r8) each activity on 2G ram. while same process consumes subtle.
+need process to make library reloadable, thus more memory usage: 110MB(release & r8) each activity on 2G ram. same process consumes subtle.
+
+how about libloading in rust side: nice for reload without new process
 
 ## conclusion
 
@@ -15,9 +17,17 @@ wechat mini-program use seperate activities for each app, but only 2 processes
 
 ## reproduce
 
-first run in android studio for app data path
+for x86_64 android emulator
+```sh
+cargo install cargo-ndk
+rustup target add x86_64-linux-android
+```
 
-build two lib and push to app data path
+
+first run in android studio to create app data path
+
+
+build two libs and push to app data path
 ```sh
 cd app/src/main/rust1
 cargo ndk -t x86_64 build
@@ -31,6 +41,6 @@ cd -
 
 ```
 
-run in android studio
+run again in android studio
 
 

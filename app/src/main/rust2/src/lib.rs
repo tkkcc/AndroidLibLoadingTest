@@ -1,4 +1,4 @@
-use std::os::raw::c_void;
+use std::{os::raw::c_void, panic};
 
 use android_logger::log;
 use jni::{
@@ -30,6 +30,21 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     // info!("embed file len: {}", embed_file.data.len());
 
     error!("i am in lib 2");
+}
+
+#[no_mangle]
+extern "C" fn start() -> i32 {
+    // can we panic in plugin?
+
+    // we must catch in plugin, catch outside not work
+    // std::process::exit(0);
+
+    panic::catch_unwind(|| {
+        panic::catch_unwind(|| {
+            panic!();
+        });
+    });
+    42
 }
 
 #[allow(non_snake_case)]

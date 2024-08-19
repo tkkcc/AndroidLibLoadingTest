@@ -32,9 +32,14 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     error!("i am in lib 1");
 }
 
+#[no_mangle]
+extern "C" fn start() -> i32 {
+    37
+}
+
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut c_void) -> jint {
+extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut c_void) -> jint {
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );

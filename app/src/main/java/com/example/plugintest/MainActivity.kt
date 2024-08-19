@@ -43,14 +43,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.e("", "onCreate: " + intent.data.toString())
-
-        val intentInfo = intent.data?.toString() ?:""
+        Log.e("",cacheDir.toString())
+        val intentInfo = intent.data?.toString() ?: ""
         enableEdgeToEdge()
         setContent {
             MaterialTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "host "+intentInfo,
+                        name = "host " + intentInfo,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -125,7 +125,7 @@ fun LibloadingTest() {
     Column {
         Text("load and release for $times times")
         Button(onClick = ::libloading) {
-            Text("start libloading test")
+            Text("libloading")
         }
         Button(onClick = { Native().start("a") }) {
             Text("call external fun")
@@ -137,7 +137,7 @@ fun LibloadingTest() {
                 libloading()
             }
         }) {
-            Text("start libloading test in thread")
+            Text("libloading in thread")
         }
         Button(onClick = {
             thread {
@@ -145,6 +145,19 @@ fun LibloadingTest() {
             }
         }) {
             Text("call external fun in thread")
+        }
+    }
+}
+
+@Composable
+fun LibloadingInRust(){
+    fun libloading() {
+        System.loadLibrary("rust")
+        Native().start("")
+    }
+    Column {
+        Button(::libloading) {
+            Text("libloading in rust")
         }
     }
 }
@@ -163,6 +176,10 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         MemoryMonitor()
 
         Spacer(Modifier.height(16.dp))
+
+        LibloadingInRust()
+        Spacer(Modifier.height(16.dp))
+
         LibloadingTest()
         Spacer(Modifier.height(16.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
