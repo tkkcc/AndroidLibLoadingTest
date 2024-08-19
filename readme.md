@@ -11,6 +11,7 @@ need process to make library reloadable, thus more memory usage: 110MB(release &
 
 wechat mini-program use seperate activities for each app, but only 2 processes
 
+1. besides taskAniffy, new task in recent screen can be created via new_document + intent data, unlimited activity numbers
 
 ## reproduce
 

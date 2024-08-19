@@ -3,6 +3,7 @@ package com.example.plugintest
 import android.app.ActivityManager
 import android.content.Context.ACTIVITY_SERVICE
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -41,18 +42,27 @@ import kotlin.system.exitProcess
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.e("", "onCreate: " + intent.data.toString())
+
+        val intentInfo = intent.data?.toString() ?:""
         enableEdgeToEdge()
         setContent {
             MaterialTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        name = "host",
+                        name = "host "+intentInfo,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
+
+//    override fun onNewIntent(newIntent: Intent) {
+//        super.onNewIntent(newIntent)
+//        Log.e("", "newIntent: " + newIntent.data.toString())
+//        intentInfo = intent.data.toString()
+//    }
 }
 
 
@@ -156,7 +166,14 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         LibloadingTest()
         Spacer(Modifier.height(16.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-
+            Button(onClick = {
+                val intent = Intent(context, MainActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+                intent.setData(Uri.parse("detail/a"))
+                context.startActivity(intent)
+            }) {
+                Text("start activity 1(new document)")
+            }
             Button(onClick = {
                 val intent = Intent(context, MainActivity2::class.java)
                 context.startActivity(intent)
