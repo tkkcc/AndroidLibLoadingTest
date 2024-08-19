@@ -1,12 +1,11 @@
 use std::os::raw::c_void;
 
-use android_logger::log;
 use jni::{
     objects::{JClass, JObject},
-    sys::{jint, JNIEnv, JavaVM, JNI_VERSION_1_6, JNI_VERSION_1_8},
+    sys::{jint, JNI_VERSION_1_6},
+    JNIEnv, JavaVM,
 };
 use log::{error, info};
-use rust_embed::Embed;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -17,7 +16,7 @@ pub fn add(left: u64, right: u64) -> u64 {
 // struct Asset;
 
 #[no_mangle]
-extern "C" fn Java_com_example_plugintest_Native_start(
+extern "C-unwind" fn Java_com_example_plugintest_Native_start(
     mut env: JNIEnv,
     class: JClass,
     host: JObject,
@@ -33,7 +32,28 @@ extern "C" fn Java_com_example_plugintest_Native_start(
 }
 
 #[no_mangle]
-extern "C" fn start() -> i32 {
+extern "C" fn start(mut env: JNIEnv, host: &JObject) -> i32 {
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
+    );
+
+    if let Err(err) = std::panic::catch_unwind(move || {
+        env.get_version().unwrap();
+        let msg = env.new_string("native toast").unwrap();
+        let obj: &JObject = msg.as_ref();
+        env.call_method(&host, "toast", "(Ljava/lang/String;)V", &[obj.into()])
+            .unwrap();
+    }) {
+        error!("{err:?}");
+    }
+
+    // let msg = env.new_string("native toast").unwrap();
+    // let obj: &JObject = msg.as_ref();
+    // env.call_method(&host, "toast", "(Ljava/lang/String;)V", &[obj.into()])
+    // }) {
+    //     error!("{err:?}");
+    // }
+
     37
 }
 

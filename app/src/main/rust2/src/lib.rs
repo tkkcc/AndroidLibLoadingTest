@@ -2,8 +2,9 @@ use std::{os::raw::c_void, panic};
 
 use android_logger::log;
 use jni::{
-    objects::{JClass, JObject},
-    sys::{jint, JNIEnv, JavaVM, JNI_VERSION_1_6},
+    objects::{GlobalRef, JClass, JObject},
+    sys::{jint, JNI_VERSION_1_6},
+    JNIEnv, JavaVM,
 };
 use log::{error, info};
 use rust_embed::Embed;
@@ -33,17 +34,20 @@ extern "C" fn Java_com_example_plugintest_Native_start(
 }
 
 #[no_mangle]
-extern "C" fn start() -> i32 {
-    // can we panic in plugin?
+extern "C" fn start(mut env: JNIEnv, host: &JObject) -> i32 {
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
+    );
 
-    // we must catch in plugin, catch outside not work
-    // std::process::exit(0);
-
-    panic::catch_unwind(|| {
-        panic::catch_unwind(|| {
-            panic!();
-        });
-    });
+    if let Err(err) = std::panic::catch_unwind(move || {
+        env.get_version().unwrap();
+        let msg = env.new_string("native toast").unwrap();
+        let obj: &JObject = msg.as_ref();
+        env.call_method(&host, "toast", "(Ljava/lang/String;)V", &[obj.into()])
+            .unwrap();
+    }) {
+        error!("{err:?}");
+    }
     42
 }
 

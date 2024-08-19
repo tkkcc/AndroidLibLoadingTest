@@ -43,7 +43,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.e("", "onCreate: " + intent.data.toString())
-        Log.e("",cacheDir.toString())
+        Log.e("", cacheDir.toString())
+       ToNative::class.java.declaredMethods.forEach {
+           Log.e("",it.toString())
+       }
         val intentInfo = intent.data?.toString() ?: ""
         enableEdgeToEdge()
         setContent {
@@ -91,6 +94,10 @@ fun LibloadingTest() {
     var times by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+
+
+
     fun libloading() {
 //        val path = context.applicationInfo.nativeLibraryDir + "/libbig.so"
 //        Log.e("","libloading path $path")
@@ -109,10 +116,10 @@ fun LibloadingTest() {
 
                 val curNative = Native()
 
-                prevNative?.start("12")
-                curNative.start("127.0.0.1")
+//                prevNative?.start("12")
+                curNative.start(ToNative(context))
 //                break
-                prevNative = curNative
+//                prevNative = curNative
                 times++
                 delay(100L)
             }
@@ -127,7 +134,7 @@ fun LibloadingTest() {
         Button(onClick = ::libloading) {
             Text("libloading")
         }
-        Button(onClick = { Native().start("a") }) {
+        Button(onClick = { Native().start(ToNative(context)) }) {
             Text("call external fun")
         }
         Spacer(Modifier.height(16.dp))
@@ -141,7 +148,7 @@ fun LibloadingTest() {
         }
         Button(onClick = {
             thread {
-                Native().start("a")
+                Native().start(ToNative(context))
             }
         }) {
             Text("call external fun in thread")
@@ -150,10 +157,11 @@ fun LibloadingTest() {
 }
 
 @Composable
-fun LibloadingInRust(){
+fun LibloadingInRust() {
+    val context = LocalContext.current
     fun libloading() {
         System.loadLibrary("rust")
-        Native().start("")
+        Native().start(ToNative(context))
     }
     Column {
         Button(::libloading) {
