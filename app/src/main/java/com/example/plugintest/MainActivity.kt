@@ -159,10 +159,16 @@ fun LibloadingInRust() {
     val context = LocalContext.current
     fun libloading() {
         System.loadLibrary("rust")
-        val t = thread {
-            Log.e("","rust begin")
-            Native().start(ToNative(context))
-            Log.e("","rust end")
+        thread {
+            Log.e("", "rust begin")
+            runCatching {
+
+                Native().start(ToNative(context))
+            }.onFailure {
+                Log.e("", "rust failed", it)
+            }
+
+            Log.e("", "rust end")
 
         }
         /// this has no effect for native call

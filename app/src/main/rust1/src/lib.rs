@@ -21,7 +21,7 @@ pub fn add(left: u64, right: u64) -> u64 {
 // struct Asset;
 
 #[no_mangle]
-extern "C-unwind" fn Java_com_example_plugintest_Native_start(
+extern "C" fn Java_com_example_plugintest_Native_start(
     mut env: JNIEnv,
     class: JClass,
     host: JObject,
@@ -37,10 +37,23 @@ extern "C-unwind" fn Java_com_example_plugintest_Native_start(
 }
 
 #[no_mangle]
-extern "C" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObject) -> i32 {
-    android_logger::init_once(
-        android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
-    );
+extern "C-unwind" fn start2() {
+    std::panic::catch_unwind(|| {
+        std::panic!("14");
+    });
+}
+
+#[no_mangle]
+extern "C-unwind" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObject) -> i32 {
+    // android_logger::init_once(
+    //     android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
+    // );
+
+    std::panic::catch_unwind(|| {
+        std::panic!("14");
+    });
+
+    return 0;
 
     let cancel_token = unsafe { AtomicBool::from_ptr(cancel_token) };
 
@@ -57,12 +70,12 @@ extern "C" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObject) ->
             error!("58 {:?}", env.get_version().unwrap());
 
             thread::sleep(Duration::from_millis(100));
-            if cancel_token.load(std::sync::atomic::Ordering::Relaxed) {
-                break;
-            }
+            // if cancel_token.load(std::sync::atomic::Ordering::Relaxed) {
+            panic!();
+            // }
         }
     }) {
-        error!("{err:?}");
+        error!("plugin panic {err:?}");
     }
 
     // let msg = env.new_string("native toast").unwrap();

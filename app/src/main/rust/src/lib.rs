@@ -1,5 +1,6 @@
+use std::error;
+use std::fs;
 use std::{
-    error, fs, panic,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -29,6 +30,23 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
+
+    let i = 1;
+    let dst = format!("/data/user/0/com.example.plugintest/cache/libbig{i}.so");
+    fs::copy(
+        format!("/data/data/com.example.plugintest/files/libbig{i}.so"),
+        &dst,
+    );
+    std::panic::catch_unwind(|| {
+        unsafe {
+            let lib = libloading::Library::new(&dst).unwrap();
+            let func: libloading::Symbol<unsafe extern "C-unwind" fn()> =
+                lib.get(b"start2").unwrap();
+            func();
+        }
+        std::panic!("14");
+    });
+    return;
 
     // tokio::spawn(async {
     error!("27");
@@ -134,6 +152,7 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         let handler = thread::spawn(move || {
             let out = call_dynamic(cancel_token, i, vm, obj_ref);
             error!("call plugin {i}  {out:?}");
+            thread::sleep(Duration::from_secs(1));
         });
         thread_holder.push(handler);
     }
@@ -143,10 +162,11 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         cancel_token.store(true, Ordering::Relaxed);
     }
     error!("set cancel flag finish");
-    error!("56");
+    error!("wait thread to finish");
+
     for handler in thread_holder {
         if let Err(err) = handler.join() {
-            error!("{err:?}");
+            error!("149");
         }
     }
     error!("57");
