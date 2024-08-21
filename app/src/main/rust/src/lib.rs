@@ -69,7 +69,7 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         let handler = thread::spawn(|| {
             let v = vec![1u8; 1_000_000_000];
 
-            thread::sleep(Duration::from_secs(0));
+            thread::sleep(Duration::from_secs(10000));
 
             error!("{:?}", v.last());
             // std::mem::forget(v);
@@ -112,6 +112,7 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     }
 
     error!("i am in lib");
+    return;
 
     let mut thread_holder = vec![];
     for i in 1..=2 {
