@@ -39,7 +39,11 @@ extern "C" fn Java_com_example_plugintest_Native_start(
 #[no_mangle]
 extern "C-unwind" fn start2() {
     std::panic::catch_unwind(|| {
-        std::panic!("14");
+        thread::spawn(|| {
+            thread::sleep(Duration::from_secs(1));
+            std::panic!("14");
+        })
+        .join();
     });
 }
 

@@ -9,6 +9,8 @@ use std::{
     time::Duration,
 };
 
+use dlopen2::wrapper::Container;
+use dlopen2::wrapper::WrapperApi;
 use jni::{
     objects::{GlobalRef, JClass, JObject},
     signature::JavaType,
@@ -37,15 +39,26 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         format!("/data/data/com.example.plugintest/files/libbig{i}.so"),
         &dst,
     );
-    std::panic::catch_unwind(|| {
-        unsafe {
-            let lib = libloading::Library::new(&dst).unwrap();
-            let func: libloading::Symbol<unsafe extern "C-unwind" fn()> =
-                lib.get(b"start2").unwrap();
-            func();
-        }
-        std::panic!("14");
-    });
+    // thread::spawn(move || unsafe {
+    //     let lib = libloading::Library::new(&dst).unwrap();
+    //     let func: libloading::Symbol<unsafe extern "C-unwind" fn()> = lib.get(b"start2").unwrap();
+    //     func();
+    // });
+    #[derive(WrapperApi)]
+    struct Api {
+        // example_rust_fun: fn(arg: i32) -> u32,
+        start2: unsafe extern "C" fn(),
+        // example_reference: &'a mut i32,
+        // A function or field may not always exist in the library.
+        // example_c_fun_option: Option<unsafe extern "C" fn()>,
+        // example_reference_option: Option<&'a mut i32>,
+    }
+    let mut cont: Container<Api> = unsafe { Container::load(&dst) }.unwrap();
+    unsafe {
+        cont.start2();
+        error!("58");
+    }
+
     return;
 
     // tokio::spawn(async {

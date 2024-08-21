@@ -33,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -157,20 +159,34 @@ fun LibloadingTest() {
 @Composable
 fun LibloadingInRust() {
     val context = LocalContext.current
+    lateinit var t : Thread
     fun libloading() {
         System.loadLibrary("rust")
-        thread {
-            Log.e("", "rust begin")
-            runCatching {
-
-                Native().start(ToNative(context))
-            }.onFailure {
-                Log.e("", "rust failed", it)
-            }
-
-            Log.e("", "rust end")
-
+        CoroutineScope(Dispatchers.Main).launch {
+            Native().start(ToNative(context))
+            Log.e("","166")
         }
+//        val m1 = object: Runnable {
+//            override fun run() {
+//                Native().start(ToNative(context))
+//                Log.e("","167")
+//            }
+//        }
+//        t = Thread(m1)
+//        t.start()
+
+//        thread {
+//            Log.e("", "rust begin")
+//            runCatching {
+//
+//                Native().start(ToNative(context))
+//            }.onFailure {
+//                Log.e("", "rust failed", it)
+//            }
+//
+//            Log.e("", "rust end")
+//
+//        }
         /// this has no effect for native call
 //        Thread.sleep(100)
 //        Log.e("","let's interrupt thread in kotlin side")
