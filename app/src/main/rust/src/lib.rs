@@ -1,4 +1,4 @@
-use std::{error, fs, panic, thread};
+use std::{error, fs, panic, thread, time::Duration};
 
 use jni::{
     objects::{GlobalRef, JClass, JObject},
@@ -6,6 +6,11 @@ use jni::{
     JNIEnv, JavaVM,
 };
 use log::error;
+use tokio::runtime::Runtime;
+use tokio_util::{
+    sync::{CancellationToken, DropGuard},
+    task::TaskTracker,
+};
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -20,6 +25,70 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
+
+    // tokio::spawn(async {
+    error!("27");
+    // let token = CancellationToken::new();
+    // let cloned_token = token.clone();
+    // let tracker = TaskTracker::new();
+    //
+    // tracker.spawn(async move {
+    //     tokio::select! {
+    //         _ = cloned_token.cancelled() => {
+    //
+    //         }
+    //         _ = tokio::time::sleep(std::time::Duration::from_secs(3)) => {
+    //             error!("1s");
+    //         }
+    //         _ = tokio::time::sleep(std::time::Duration::from_secs(2)) => {
+    //             error!("2s");
+    //         }
+    //     }
+    // });
+    // token.cancel();
+    // tracker.close();
+    // tracker.wait().await;
+
+    let runtime = Runtime::new().unwrap();
+
+    error!("45");
+    // runtime.block_on(async move {
+    //     tokio::task::spawn_blocking(|| loop {
+    //         for i in (0..=100000000).cycle() {
+    //             if i == 100000000 {
+    //                 error!("56 {i}");
+    //                 std::thread::sleep(Duration::from_secs(1));
+    //                 // panic!();
+    //             }
+    //         }
+    //     });
+    //     error!("46");
+    // });
+    std::panic::catch_unwind(|| {
+        error!("47");
+        let handler = thread::spawn(|| {
+            let v = vec![1u8; 1_000_000_000];
+
+            thread::sleep(Duration::from_secs(0));
+
+            error!("{:?}", v.last());
+            // std::mem::forget(v);
+
+            //     for i in (0..=200000000).cycle() {
+            //         if i == 200000000 {
+            //             error!("57 {i}");
+            //             // panic!();
+            //         }
+            //     }
+        });
+
+        // thread::sleep(Duration::from_secs(1));
+        // panic!();
+        handler.join();
+    });
+
+    // runtime.shutdown_timeout(Duration::from_secs_f64(1.4));
+    error!("48");
 
     // libloading test
     fn call_dynamic(

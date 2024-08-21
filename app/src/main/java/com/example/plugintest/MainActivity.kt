@@ -44,9 +44,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.e("", "onCreate: " + intent.data.toString())
         Log.e("", cacheDir.toString())
-       ToNative::class.java.declaredMethods.forEach {
-           Log.e("",it.toString())
-       }
+        ToNative::class.java.declaredMethods.forEach {
+            Log.e("", it.toString())
+        }
         val intentInfo = intent.data?.toString() ?: ""
         enableEdgeToEdge()
         setContent {
@@ -94,8 +94,6 @@ fun LibloadingTest() {
     var times by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
-
 
 
     fun libloading() {
@@ -162,8 +160,10 @@ fun LibloadingInRust() {
     fun libloading() {
         System.loadLibrary("rust")
         thread {
-
+            Log.e("","rust begin")
             Native().start(ToNative(context))
+            Log.e("","rust end")
+
         }
     }
     Column {

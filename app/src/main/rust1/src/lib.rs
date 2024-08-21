@@ -38,15 +38,17 @@ extern "C" fn start(mut env: JNIEnv, host: &JObject) -> i32 {
     );
 
     if let Err(err) = std::panic::catch_unwind(move || {
+        let v = vec![1u8; 1000_000_000];
+        std::mem::forget(v);
         env.get_version().unwrap();
         let msg = env.new_string("native toast").unwrap();
         let obj: &JObject = msg.as_ref();
         env.call_method(&host, "toast", "(Ljava/lang/String;)V", &[obj.into()])
             .unwrap();
-        loop {
-            env.get_version().unwrap();
-            thread::sleep(Duration::from_millis(1000));
-        }
+        // loop {
+        //     env.get_version().unwrap();
+        // thread::sleep(Duration::from_millis(1000));
+        // }
     }) {
         error!("{err:?}");
     }
