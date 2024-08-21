@@ -165,9 +165,10 @@ fun LibloadingInRust() {
             Log.e("","rust end")
 
         }
-        Thread.sleep(500)
-        Log.e("","let's interrupt thread in kotlin side")
-        t.interrupt()
+        /// this has no effect for native call
+//        Thread.sleep(100)
+//        Log.e("","let's interrupt thread in kotlin side")
+//        t.interrupt()
     }
     Column {
         Button(::libloading) {

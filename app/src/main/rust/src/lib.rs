@@ -1,4 +1,12 @@
-use std::{error, fs, panic, thread, time::Duration};
+use std::{
+    error, fs, panic,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    thread,
+    time::Duration,
+};
 
 use jni::{
     objects::{GlobalRef, JClass, JObject},
@@ -7,10 +15,6 @@ use jni::{
 };
 use log::error;
 use tokio::runtime::Runtime;
-use tokio_util::{
-    sync::{CancellationToken, DropGuard},
-    task::TaskTracker,
-};
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
@@ -69,7 +73,7 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         let handler = thread::spawn(|| {
             let v = vec![1u8; 1_000_000_000];
 
-            thread::sleep(Duration::from_secs(10000));
+            // thread::sleep(Duration::from_secs(10000));
 
             error!("{:?}", v.last());
             // std::mem::forget(v);
@@ -92,6 +96,7 @@ extern "C" fn Java_com_example_plugintest_Native_start(
 
     // libloading test
     fn call_dynamic(
+        cancel_token: Arc<AtomicBool>,
         i: usize,
         vm: JavaVM,
         host: GlobalRef,
@@ -103,27 +108,41 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         )?;
         // env.attach_current_thread_permanently().unwrap();
         // Ok(0)
+
         unsafe {
             let lib = libloading::Library::new(&dst)?;
-            let func: libloading::Symbol<extern "C" fn(JNIEnv, &JObject) -> i32> =
+            let func: libloading::Symbol<extern "C" fn(*mut bool, JNIEnv, &JObject) -> i32> =
                 lib.get(b"start")?;
-            Ok(func(vm.attach_current_thread_permanently().unwrap(), &host))
+            Ok(func(
+                cancel_token.as_ptr(),
+                vm.attach_current_thread_permanently().unwrap(),
+                &host,
+            ))
         }
     }
 
     error!("i am in lib");
-    return;
 
     let mut thread_holder = vec![];
-    for i in 1..=2 {
+    let mut thread_cancel_token = vec![];
+    for i in 1..=1 {
         let obj_ref = env.new_global_ref(&host).unwrap();
         let vm = env.get_java_vm().unwrap();
+        let cancel_token = Arc::new(AtomicBool::new(false));
+        thread_cancel_token.push(cancel_token.clone());
+
         let handler = thread::spawn(move || {
-            let out = call_dynamic(i, vm, obj_ref);
+            let out = call_dynamic(cancel_token, i, vm, obj_ref);
             error!("call plugin {i}  {out:?}");
         });
         thread_holder.push(handler);
     }
+
+    thread::sleep(Duration::from_secs(1));
+    for cancel_token in thread_cancel_token {
+        cancel_token.store(true, Ordering::Relaxed);
+    }
+    error!("set cancel flag finish");
     error!("56");
     for handler in thread_holder {
         if let Err(err) = handler.join() {

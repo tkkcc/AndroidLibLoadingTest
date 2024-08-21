@@ -1,4 +1,9 @@
-use std::{os::raw::c_void, thread, time::Duration};
+use std::{
+    os::raw::c_void,
+    sync::{atomic::AtomicBool, Arc},
+    thread,
+    time::Duration,
+};
 
 use jni::{
     objects::{JClass, JObject},
@@ -32,23 +37,30 @@ extern "C-unwind" fn Java_com_example_plugintest_Native_start(
 }
 
 #[no_mangle]
-extern "C" fn start(mut env: JNIEnv, host: &JObject) -> i32 {
+extern "C" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObject) -> i32 {
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
 
+    let cancel_token = unsafe { AtomicBool::from_ptr(cancel_token) };
+
     if let Err(err) = std::panic::catch_unwind(move || {
         let v = vec![1u8; 1000_000_000];
-        std::mem::forget(v);
+
+        // std::mem::forget(v);
         env.get_version().unwrap();
         let msg = env.new_string("native toast").unwrap();
         let obj: &JObject = msg.as_ref();
         env.call_method(&host, "toast", "(Ljava/lang/String;)V", &[obj.into()])
             .unwrap();
-        // loop {
-        //     env.get_version().unwrap();
-        // thread::sleep(Duration::from_millis(1000));
-        // }
+        loop {
+            error!("58 {:?}", env.get_version().unwrap());
+
+            thread::sleep(Duration::from_millis(100));
+            if cancel_token.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
+            }
+        }
     }) {
         error!("{err:?}");
     }
