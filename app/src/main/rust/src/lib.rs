@@ -1,3 +1,4 @@
+use core::panic;
 use std::error;
 use std::fs;
 use std::{
@@ -32,6 +33,7 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
+    // std::panic!();
 
     let i = 1;
     let dst = format!("/data/user/0/com.example.plugintest/cache/libbig{i}.so");
@@ -41,25 +43,33 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     );
     // thread::spawn(move || unsafe {
     //     let lib = libloading::Library::new(&dst).unwrap();
-    //     let func: libloading::Symbol<unsafe extern "C-unwind" fn()> = lib.get(b"start2").unwrap();
+    //     let func: libloading::Symbol<unsafe extern "C" fn()> = lib.get(b"start2").unwrap();
     //     func();
-    // });
-    #[derive(WrapperApi)]
-    struct Api {
-        // example_rust_fun: fn(arg: i32) -> u32,
-        start2: unsafe extern "C" fn(),
-        // example_reference: &'a mut i32,
-        // A function or field may not always exist in the library.
-        // example_c_fun_option: Option<unsafe extern "C" fn()>,
-        // example_reference_option: Option<&'a mut i32>,
-    }
-    let mut cont: Container<Api> = unsafe { Container::load(&dst) }.unwrap();
+    // })
+    // .join();
     unsafe {
-        cont.start2();
-        error!("58");
+        let lib = libloading::Library::new(&dst).unwrap();
+        let func: libloading::Symbol<unsafe extern "C" fn()> = lib.get(b"start2").unwrap();
+        func();
     }
-
     return;
+
+    // #[derive(WrapperApi)]
+    // struct Api {
+    //     // example_rust_fun: fn(arg: i32) -> u32,
+    //     start2: unsafe extern "C" fn(),
+    //     // example_reference: &'a mut i32,
+    //     // A function or field may not always exist in the library.
+    //     // example_c_fun_option: Option<unsafe extern "C" fn()>,
+    //     // example_reference_option: Option<&'a mut i32>,
+    // }
+    // let mut cont: Container<Api> = unsafe { Container::load(&dst) }.unwrap();
+    // unsafe {
+    //     cont.start2();
+    //     error!("58");
+    // }
+
+    // return;
 
     // tokio::spawn(async {
     error!("27");
@@ -99,28 +109,26 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     //     });
     //     error!("46");
     // });
-    std::panic::catch_unwind(|| {
-        error!("47");
-        let handler = thread::spawn(|| {
-            let v = vec![1u8; 1_000_000_000];
+    error!("47");
+    let handler = thread::spawn(|| {
+        let v = vec![1u8; 1_000_000_000];
 
-            // thread::sleep(Duration::from_secs(10000));
+        // thread::sleep(Duration::from_secs(10000));
 
-            error!("{:?}", v.last());
-            // std::mem::forget(v);
+        error!("{:?}", v.last());
+        // std::mem::forget(v);
 
-            //     for i in (0..=200000000).cycle() {
-            //         if i == 200000000 {
-            //             error!("57 {i}");
-            //             // panic!();
-            //         }
-            //     }
-        });
-
-        // thread::sleep(Duration::from_secs(1));
-        // panic!();
-        handler.join();
+        //     for i in (0..=200000000).cycle() {
+        //         if i == 200000000 {
+        //             error!("57 {i}");
+        //             // panic!();
+        //         }
+        //     }
     });
+
+    // thread::sleep(Duration::from_secs(1));
+    // panic!();
+    handler.join();
 
     // runtime.shutdown_timeout(Duration::from_secs_f64(1.4));
     error!("48");
@@ -142,14 +150,17 @@ extern "C" fn Java_com_example_plugintest_Native_start(
 
         unsafe {
             let lib = libloading::Library::new(&dst)?;
-            let func: libloading::Symbol<extern "C" fn(*mut bool, JNIEnv, &JObject) -> i32> =
-                lib.get(b"start")?;
-            Ok(func(
-                cancel_token.as_ptr(),
-                vm.attach_current_thread_permanently().unwrap(),
-                &host,
-            ))
-        }
+            // let func: libloading::Symbol<extern "C" fn(*mut bool, JNIEnv, &JObject) -> i32> =
+            //     lib.get(b"start")?;
+            // Ok(func(
+            //     cancel_token.as_ptr(),
+            //     vm.attach_current_thread_permanently().unwrap(),
+            //     &host,
+            // ))
+            let func: libloading::Symbol<extern "C" fn()> = lib.get(b"start2")?;
+            func();
+        };
+        Ok(0)
     }
 
     error!("i am in lib");
@@ -183,11 +194,6 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         }
     }
     error!("57");
-
-    // error!(
-    //     "call function in plugin 2: {:?}",
-    //     call_dynamic(2, &env, &host)
-    // );
 }
 
 #[cfg(test)]
