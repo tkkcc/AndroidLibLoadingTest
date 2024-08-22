@@ -39,14 +39,28 @@ extern "C" fn Java_com_example_plugintest_Native_start(
 
 #[no_mangle]
 extern "C" fn start2() {
-    std::panic::catch_unwind(|| {
-        // std::panic!();
-        thread::spawn(|| {
-            std::panic!("14");
-            // thread::sleep(Duration::from_secs(1));
-        })
-        .join();
-    });
+    android_logger::init_once(
+        android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
+    );
+    // std::panic::catch_unwind(|| {
+    thread::spawn(|| {
+        let h = thread::spawn(|| {
+            let v = vec![1u8; 1000_000_000];
+            // loop {
+            //     thread::sleep(Duration::from_secs(1));
+            // error!("31")
+            // }
+            thread::sleep(Duration::from_secs(10000));
+        });
+        thread::sleep(Duration::from_secs(1));
+        error!("43");
+        std::panic!("14");
+        h.join();
+        error!("44");
+        // thread::sleep(Duration::from_secs(1));
+    })
+    .join();
+    // });
 }
 
 #[no_mangle]

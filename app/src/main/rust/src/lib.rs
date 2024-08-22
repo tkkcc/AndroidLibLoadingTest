@@ -1,6 +1,8 @@
 use core::panic;
+use core::slice;
 use std::error;
 use std::fs;
+use std::thread::sleep;
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -12,6 +14,7 @@ use std::{
 
 use dlopen2::wrapper::Container;
 use dlopen2::wrapper::WrapperApi;
+use jni::objects::JByteBuffer;
 use jni::{
     objects::{GlobalRef, JClass, JObject},
     signature::JavaType,
@@ -33,7 +36,30 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
-    // std::panic!();
+
+    let err = std::panic::catch_unwind(move || {
+        error!("1");
+        // test bytebuffer
+        let buf = env
+            .call_method(&host, "fetchScreen", "()Ljava/nio/ByteBuffer;", &[])
+            .unwrap()
+            .l()
+            .unwrap();
+        error!("2");
+        let buf = JByteBuffer::from(buf);
+        error!("3");
+        let addr = env.get_direct_buffer_address(&buf).unwrap();
+        error!("4");
+        let capacity = env.get_direct_buffer_capacity(&buf).unwrap();
+        let data = unsafe { slice::from_raw_parts(addr, capacity) };
+        loop {
+            error!("first{:?} last{:?}", &data[0..4], &data[data.len() - 4..]);
+            sleep(Duration::from_millis(3));
+        }
+    });
+    error!("{err:?}");
+
+    return;
 
     let i = 1;
     let dst = format!("/data/user/0/com.example.plugintest/cache/libbig{i}.so");
@@ -52,6 +78,7 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         let func: libloading::Symbol<unsafe extern "C" fn()> = lib.get(b"start2").unwrap();
         func();
     }
+    error!("55");
     return;
 
     // #[derive(WrapperApi)]
