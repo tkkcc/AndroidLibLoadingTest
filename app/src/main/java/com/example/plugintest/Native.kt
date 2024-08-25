@@ -2,6 +2,7 @@ package com.example.plugintest
 
 import android.content.Context
 import android.util.Log
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import java.lang.Thread.sleep

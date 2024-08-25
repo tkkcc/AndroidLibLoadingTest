@@ -23,6 +23,8 @@ cargo install cargo-ndk
 rustup target add x86_64-linux-android
 ```
 
+change target to x86_64 in app/build.gradle.kts
+
 
 first run in android studio to create app data path
 
