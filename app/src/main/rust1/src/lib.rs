@@ -1,7 +1,7 @@
 use core::panic;
 use std::{
     os::raw::c_void,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{atomic::AtomicBool, Arc, LazyLock},
     thread,
     time::Duration,
 };
@@ -42,26 +42,36 @@ extern "C" fn start2() {
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
+    let o = std::panic::catch_unwind(|| {
+        let mut x = 255;
+        x = ST[0] + ST[ST.len() - 1];
+        error!("i am in rust1 start2 x:{x}");
+    });
+    std::thread::sleep(Duration::from_secs(3));
+    error!("err in rust1 {o:?}")
+    // std::thread::sleep(Duration::from_secs(4));
     // std::panic::catch_unwind(|| {
-    thread::spawn(|| {
-        let h = thread::spawn(|| {
-            let v = vec![1u8; 1000_000_000];
-            // loop {
-            //     thread::sleep(Duration::from_secs(1));
-            // error!("31")
-            // }
-            thread::sleep(Duration::from_secs(10000));
-        });
-        thread::sleep(Duration::from_secs(1));
-        error!("43");
-        std::panic!("14");
-        h.join();
-        error!("44");
-        // thread::sleep(Duration::from_secs(1));
-    })
-    .join();
+    // thread::spawn(|| {
+    //     let h = thread::spawn(|| {
+    //         let v = vec![1u8; 1000_000_000];
+    //         // loop {
+    //         //     thread::sleep(Duration::from_secs(1));
+    //         // error!("31")
+    //         // }
+    //         thread::sleep(Duration::from_secs(10000));
+    //     });
+    //     thread::sleep(Duration::from_secs(1));
+    //     error!("43");
+    //     std::panic!("14");
+    //     h.join();
+    //     error!("44");
+    //     // thread::sleep(Duration::from_secs(1));
+    // })
+    // .join();
     // });
 }
+
+static ST: LazyLock<Vec<u8>> = LazyLock::new(|| vec![0u8; 500_000_000]);
 
 #[no_mangle]
 extern "C-unwind" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObject) -> i32 {
@@ -69,13 +79,13 @@ extern "C-unwind" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObj
     //     android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     // );
 
-    std::panic::catch_unwind(|| {
-        std::panic!("14");
-    });
+    // std::panic::catch_unwind(|| {
+    //     std::panic!("14");
+    // });
 
     return 0;
 
-    let cancel_token = unsafe { AtomicBool::from_ptr(cancel_token) };
+    let cancel_token: &AtomicBool = unsafe { AtomicBool::from_ptr(cancel_token) };
 
     if let Err(err) = std::panic::catch_unwind(move || {
         let v = vec![1u8; 1000_000_000];
@@ -89,7 +99,7 @@ extern "C-unwind" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObj
         loop {
             error!("58 {:?}", env.get_version().unwrap());
 
-            thread::sleep(Duration::from_millis(100));
+            std::thread::sleep(Duration::from_millis(100));
             // if cancel_token.load(std::sync::atomic::Ordering::Relaxed) {
             panic!();
             // }

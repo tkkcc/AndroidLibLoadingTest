@@ -20,6 +20,7 @@ use jni::{
     signature::JavaType,
     JNIEnv, JavaVM,
 };
+use libloading::Library;
 use log::error;
 use tokio::runtime::Runtime;
 
@@ -37,29 +38,29 @@ extern "C" fn Java_com_example_plugintest_Native_start(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
 
-    let err = std::panic::catch_unwind(move || {
-        error!("1");
-        // test bytebuffer
-        let buf = env
-            .call_method(&host, "fetchScreen", "()Ljava/nio/ByteBuffer;", &[])
-            .unwrap()
-            .l()
-            .unwrap();
-        error!("2");
-        let buf = JByteBuffer::from(buf);
-        error!("3");
-        let addr = env.get_direct_buffer_address(&buf).unwrap();
-        error!("4");
-        let capacity = env.get_direct_buffer_capacity(&buf).unwrap();
-        let data = unsafe { slice::from_raw_parts(addr, capacity) };
-        loop {
-            error!("first{:?} last{:?}", &data[0..4], &data[data.len() - 4..]);
-            sleep(Duration::from_millis(3));
-        }
-    });
-    error!("{err:?}");
-
-    return;
+    // let err = std::panic::catch_unwind(move || {
+    //     error!("1");
+    //     // test bytebuffer
+    //     let buf = env
+    //         .call_method(&host, "fetchScreen", "()Ljava/nio/ByteBuffer;", &[])
+    //         .unwrap()
+    //         .l()
+    //         .unwrap();
+    //     error!("2");
+    //     let buf = JByteBuffer::from(buf);
+    //     error!("3");
+    //     let addr = env.get_direct_buffer_address(&buf).unwrap();
+    //     error!("4");
+    //     let capacity = env.get_direct_buffer_capacity(&buf).unwrap();
+    //     let data = unsafe { slice::from_raw_parts(addr, capacity) };
+    //     loop {
+    //         error!("first{:?} last{:?}", &data[0..4], &data[data.len() - 4..]);
+    //         sleep(Duration::from_millis(3));
+    //     }
+    // });
+    // error!("{err:?}");
+    //
+    // return;
 
     let i = 1;
     let dst = format!("/data/user/0/com.example.plugintest/cache/libbig{i}.so");
@@ -75,11 +76,14 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     // .join();
     unsafe {
         let lib = libloading::Library::new(&dst).unwrap();
+        // let lib: Library = libloading::os::unix::Library::open(Some(dst), 0x2 | 0x1000)
+        //     .unwrap()
+        //     .into();
         let func: libloading::Symbol<unsafe extern "C" fn()> = lib.get(b"start2").unwrap();
         func();
     }
-    error!("55");
-    return;
+    // error!("55");
+    // return;
 
     // #[derive(WrapperApi)]
     // struct Api {
@@ -95,8 +99,8 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     //     cont.start2();
     //     error!("58");
     // }
-
-    // return;
+    //
+    return;
 
     // tokio::spawn(async {
     error!("27");
@@ -137,25 +141,25 @@ extern "C" fn Java_com_example_plugintest_Native_start(
     //     error!("46");
     // });
     error!("47");
-    let handler = thread::spawn(|| {
-        let v = vec![1u8; 1_000_000_000];
-
-        // thread::sleep(Duration::from_secs(10000));
-
-        error!("{:?}", v.last());
-        // std::mem::forget(v);
-
-        //     for i in (0..=200000000).cycle() {
-        //         if i == 200000000 {
-        //             error!("57 {i}");
-        //             // panic!();
-        //         }
-        //     }
-    });
-
-    // thread::sleep(Duration::from_secs(1));
-    // panic!();
-    handler.join();
+    // let handler = thread::spawn(|| {
+    //     let v = vec![1u8; 1_000_000_000];
+    //
+    //     // thread::sleep(Duration::from_secs(10000));
+    //
+    //     error!("{:?}", v.last());
+    //     // std::mem::forget(v);
+    //
+    //     //     for i in (0..=200000000).cycle() {
+    //     //         if i == 200000000 {
+    //     //             error!("57 {i}");
+    //     //             // panic!();
+    //     //         }
+    //     //     }
+    // });
+    //
+    // // thread::sleep(Duration::from_secs(1));
+    // // panic!();
+    // handler.join();
 
     // runtime.shutdown_timeout(Duration::from_secs_f64(1.4));
     error!("48");
@@ -192,35 +196,37 @@ extern "C" fn Java_com_example_plugintest_Native_start(
 
     error!("i am in lib");
 
-    let mut thread_holder = vec![];
-    let mut thread_cancel_token = vec![];
-    for i in 1..=1 {
-        let obj_ref = env.new_global_ref(&host).unwrap();
-        let vm = env.get_java_vm().unwrap();
-        let cancel_token = Arc::new(AtomicBool::new(false));
-        thread_cancel_token.push(cancel_token.clone());
+    let out = std::panic::catch_unwind(move || {
+        let mut thread_holder = vec![];
+        let mut thread_cancel_token = vec![];
+        for i in 1..=1 {
+            let obj_ref = env.new_global_ref(&host).unwrap();
+            let vm = env.get_java_vm().unwrap();
+            let cancel_token = Arc::new(AtomicBool::new(false));
+            thread_cancel_token.push(cancel_token.clone());
 
-        let handler = thread::spawn(move || {
-            let out = call_dynamic(cancel_token, i, vm, obj_ref);
-            error!("call plugin {i}  {out:?}");
-            thread::sleep(Duration::from_secs(1));
-        });
-        thread_holder.push(handler);
-    }
-
-    thread::sleep(Duration::from_secs(1));
-    for cancel_token in thread_cancel_token {
-        cancel_token.store(true, Ordering::Relaxed);
-    }
-    error!("set cancel flag finish");
-    error!("wait thread to finish");
-
-    for handler in thread_holder {
-        if let Err(err) = handler.join() {
-            error!("149");
+            let handler = thread::spawn(move || {
+                let out = call_dynamic(cancel_token, i, vm, obj_ref);
+                error!("call plugin {i}  {out:?}");
+                // thread::sleep(Duration::from_secs(1));
+            });
+            thread_holder.push(handler);
         }
-    }
-    error!("57");
+
+        // thread::sleep(Duration::from_secs(1));
+        for cancel_token in thread_cancel_token {
+            cancel_token.store(true, Ordering::Relaxed);
+        }
+        error!("set cancel flag finish");
+        error!("wait thread to finish");
+
+        for handler in thread_holder {
+            if let Err(err) = handler.join() {
+                error!("149");
+            }
+        }
+    });
+    error!("57 {out:?}");
 }
 
 #[cfg(test)]

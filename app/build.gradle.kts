@@ -49,9 +49,9 @@ androidComponents.onVariants { variant ->
 //    return@onVariants
     val target = if (variant.buildType == "release") {
 //        listOf("x86", "x86_64", "arm64-v8a", "armeabi-v7a")
-        listOf( "x86")
+        listOf( "x86","x86_64")
     } else {
-        listOf("x86")
+        listOf("x86","x86_64")
     }
 
     val source = Path(projectDir.absolutePath, "src", "main", "rust")
