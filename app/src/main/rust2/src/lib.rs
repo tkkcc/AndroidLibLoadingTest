@@ -4,7 +4,7 @@ use android_logger::log;
 use jni::{
     objects::{GlobalRef, JClass, JObject},
     sys::{jint, JNI_VERSION_1_6},
-    JNIEnv, JavaVM,
+    JNIEnv, JavaVM, NativeMethod,
 };
 use log::{error, info};
 use rust_embed::Embed;
@@ -57,8 +57,27 @@ pub extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut c_void) -> jint {
     android_logger::init_once(
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
-    error!("onload: i am in lib 2");
+    error!("onload: i am in lib 1");
+    let mut env = vm.attach_current_thread_permanently().unwrap();
+    let cls = env
+        .find_class("com/example/plugintest/DynamicNative")
+        .unwrap();
+    env.register_native_methods(
+        cls,
+        &[NativeMethod {
+            name: "start".into(),
+            sig: "()V".into(),
+            fn_ptr: start3 as *mut c_void,
+        }],
+    )
+    .unwrap();
+
     JNI_VERSION_1_6
+}
+
+#[no_mangle]
+extern "C" fn start3(env: JNIEnv) {
+    error!("i am in start in lib 2");
 }
 
 #[cfg(test)]

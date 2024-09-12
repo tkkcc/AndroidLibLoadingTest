@@ -90,6 +90,54 @@ fun MemoryMonitor() {
     Text("memory free: $memory MB, total: $memoryTotal MB")
 }
 
+@Composable
+fun RegisterNativeTest() {
+    var times by remember { mutableStateOf(0) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+
+    fun libloading() {
+//        val path = context.applicationInfo.nativeLibraryDir + "/libbig.so"
+//        Log.e("","libloading path $path")
+        val cache = mutableListOf<DynamicNative>()
+        scope.launch {
+//            delay(10000L)
+            var prevNative: Native? = null
+            var prevI = 2
+            for (i in 0..10) {
+                val i = if (prevI == 2) 1 else 2
+                prevI = i
+                val path = "/data/data/com.example.plugintest/files/libbig$i.so"
+                Log.e("", "path: $path")
+                System.load(path)
+//                System.loadLibrary("big")
+
+                val curNative = DynamicNative()
+
+//                prevNative?.start("12")
+                cache.add(curNative)
+                for (n in cache) {
+                    n.start()
+                }
+//                break
+//                prevNative = curNative
+                times++
+                delay(100L)
+            }
+//            Log.e("", "after scope launch")
+//            Native().start("")
+        }
+
+    }
+
+    Column {
+        Text("load different libs on same interface?")
+        Button(onClick = ::libloading) {
+            Text("libloading register native")
+        }
+    }
+}
 
 @Composable
 fun LibloadingTest() {
@@ -216,6 +264,10 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(16.dp))
 
         LibloadingInRust()
+        Spacer(Modifier.height(16.dp))
+
+
+        RegisterNativeTest()
         Spacer(Modifier.height(16.dp))
 
         LibloadingTest()

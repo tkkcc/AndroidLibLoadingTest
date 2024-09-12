@@ -9,7 +9,7 @@ use std::{
 use jni::{
     objects::{JClass, JObject},
     sys::{jint, JNI_VERSION_1_6},
-    JNIEnv, JavaVM,
+    JNIEnv, JavaVM, NativeMethod,
 };
 use log::{error, info};
 
@@ -118,6 +118,11 @@ extern "C-unwind" fn start(cancel_token: *mut bool, mut env: JNIEnv, host: &JObj
     37
 }
 
+#[no_mangle]
+extern "C" fn start3(env: JNIEnv) {
+    error!("i am in start in lib 1");
+}
+
 #[allow(non_snake_case)]
 #[no_mangle]
 extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut c_void) -> jint {
@@ -125,16 +130,19 @@ extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut c_void) -> jint {
         android_logger::Config::default().with_max_level(log::LevelFilter::Debug),
     );
     error!("onload: i am in lib 1");
+    let mut env = vm.attach_current_thread_permanently().unwrap();
+    let cls = env
+        .find_class("com/example/plugintest/DynamicNative")
+        .unwrap();
+    env.register_native_methods(
+        cls,
+        &[NativeMethod {
+            name: "start".into(),
+            sig: "()V".into(),
+            fn_ptr: start3 as *mut c_void,
+        }],
+    )
+    .unwrap();
+
     JNI_VERSION_1_6
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
 }

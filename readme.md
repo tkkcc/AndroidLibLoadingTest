@@ -1,8 +1,8 @@
 # Android library loading test
 
-need process to make library reloadable, thus more memory usage: 110MB(release & r8) each activity on 2G ram. same process consumes subtle.
+System.load need process to make library reloadable, thus more memory usage: 110MB(release & r8) each activity on 2G ram. same process consumes subtle
 
-how about libloading in rust side: nice for reload without new process
+how about libloading in rust side: can reload without new process, but statics are leaked
 
 ## conclusion
 
@@ -14,7 +14,7 @@ how about libloading in rust side: nice for reload without new process
 wechat mini-program use seperate activities for each app, but only 2 processes
 
 1. besides taskAniffy, new task in recent screen can be created via new_document + intent data, unlimited activity numbers
-1. libloading reload will leak on library static: <https://github.com/nagisa/rust_libloading/issues/156>. so System.load and libloading is same for us
+1. libloading reload will leak on library static: <https://github.com/nagisa/rust_libloading/issues/157>. so System.load and libloading is same for us
 
 ## reproduce
 

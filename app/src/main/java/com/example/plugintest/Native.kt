@@ -14,6 +14,16 @@ class Native {
     external fun start(host: ToNative)
 }
 
+class DynamicNative {
+    external fun start()
+    external fun stop()
+}
+
+fun t() {
+    val m : HashMap<String, fun>();
+
+}
+
 class ToNative(val context: Context) {
     fun toast(msg: String) {
         (context as ComponentActivity).runOnUiThread {
